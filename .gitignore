@@ -1,0 +1,21 @@
+# Python files
+__pycache__/
+*.pyc 
+*.pyo 
+*.pyd 
+
+# Envs
+.env 
+.venv 
+env/
+venv/
+
+# Data
+data/raw/
+data/processed/
+
+# Results
+results/
+
+# IDEs
+.vscode/
