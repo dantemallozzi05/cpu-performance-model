@@ -36,6 +36,30 @@ def main():
     numeric_cols = X.select_dtypes(include=["number"]).columns.tolist()
     categorical_cols = X.select_dtypes(exclude=["number"]).columns.tolist()
 
+    print("Numeric Columns:", numeric_cols)
+    print("Categorical Columns:", categorical_cols)
+
+    # Initialize processing pipeline for numeric data 
+    numeric_transformer = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="median")),
+        ("scalar", StandardScaler()),
+    ])
+
+    # pipeline for categorical data
+    categorical_transformer = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("onehot", OneHotEncoder(handle_unknown="ignore")),
+    ])
+
+    # apply transforms to feature sets
+    preprocesser = ColumnTransformer(
+        transformers=[
+            ("num", numeric_transformer, numeric_cols),
+            ("cat", categorical_transformer, categorical_cols),
+        ],
+        remainder="drop",
+    )
+
 
 
 if __name__ == "__main__":
