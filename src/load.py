@@ -14,10 +14,15 @@ def main():
 
     if not os.path.exists(data_loc):
         raise FileNotFoundError(f"Couldn't locate in {data_loc}")
+    
+    # Load Data
+    df = pd.read_csv(data_loc)
 
+    # Early analysis
+    print(df.shape)
+    print(df.columns.tolist())
     
 
 
-
-
-main()
+if __name == "__main__":
+    main()
