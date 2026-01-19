@@ -7,7 +7,7 @@ from sklearn.neighbors import NearestNeighbors
 
 def main():
 
-    cleaned_file = "cpu_cleaned.csv"
+    cleaned_file = "data/processed/cpu_cleaned.csv"
     graph_dir = "data/processed/graph"
 
     os.makedirs(graph_dir, exist_ok=True)
@@ -42,4 +42,32 @@ def main():
     scaler = StandardScaler()
     X = scaler.fit_transform(X).astype(np.float32)
     
+    # build edges, finds k similar CPUs with cosine distance
+    nn = NearestNeighbors(n_neighbors=k + 1, metric="cosine")
+    nn.fit(X)
+
+    distances, indices = nn.kneighbors(X)
+    
+    # initial neighbor
+    neighbor_idx = indices[:, 1:]
+
+    # use directed edges
+    num_nodes = X.shape[0]
+    src = np.repeat(np.arange(num_nodes), k)
+    dst = neighbor_idx.reshape(-1)
+
+    # convert to undirected graph
+    src_und = np.concatenate([src, dst])
+    dst_und = np.concatenate([dst, src])
+
+    i_edge = np.vstack([src_und, dst_und]).astype(np.int64)
+
+    np.save(os.path.join(graph_dir, "x.npy"), X)
+    np.save(os.path.join(graph_dir, "y.npy"), y.astype(np.int64))
+    np.save(os.path.join(graph_dir, "i_edge"), i_edge)
+
+
+if __name__ == "__main__":
+    main()
+
 
