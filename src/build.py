@@ -65,6 +65,7 @@ def main():
     np.save(os.path.join(graph_dir, "x.npy"), X)
     np.save(os.path.join(graph_dir, "y.npy"), y.astype(np.int64))
     np.save(os.path.join(graph_dir, "i_edge"), i_edge)
+    
 
 
 if __name__ == "__main__":
