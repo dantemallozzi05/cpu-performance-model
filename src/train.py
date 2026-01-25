@@ -2,6 +2,7 @@ import os
 import numpy as np
 import torch
 import torch.nn.functional as F
+import json
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
@@ -83,7 +84,6 @@ def main():
         test_mask=test_mask
     )
 
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     data = data.to(device)
 
@@ -128,6 +128,18 @@ def main():
     print(f"Best val accuracy: {best_val_acc}")
     print(f"Test Accuracy: {test_acc}")
     print(f"Test Macro F1: {test_f1}")
+    results = {
+        "model": "Graph",
+        "accuracy": float(test_acc),
+        "macro_f1": float(test_f1),
+        "best_val_accuracy": float(best_val_acc)
+    }
+
+    os.makedirs("results", exist_ok=True)
+    with open("results/gnn_results.json", "w") as f:
+        json.dump(results, f, indent=2)
+
+    print(results)
 
 if __name__ == "__main__":
     main()
