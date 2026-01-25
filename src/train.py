@@ -9,9 +9,21 @@ from sklearn.metrics import accuracy_score, f1_score
 from torch_geometric.data import Data
 from torch_geometric.nn import SAGEConv
 
+# Implementing GNN model GraphSAGE
+class GraphSAGE(torch.nn.Module):
+    def __init__(self, in_channels, hidden_channels, out_channels):
+        super().__init__()
+        self.conv1 = SAGEConv(in_channels, hidden_channels)
+        self.conv2 = SAGEConv(hidden_channels, out_channels)
 
+    def forward(self, x, edge_index):
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.conv2(x, edge_index)
+        return x
+    
 # make_split_mask - assigns nodes into train, evaluation, and test groups
-
 def make_split_mask(y):
     id_n = np.arange(len(y))
 
@@ -24,11 +36,24 @@ def make_split_mask(y):
     )
 
     train_mask = torch.zeros(len(y), dtype=torch.bool)
+    val_mask = torch.zeros(len(y), dtype=torch.bool)
+    test_mask = torch.zeros(len(y), dtype=torch.bool)
 
     train_mask[train] = True
+    val_mask[val] = True
+    test_mask[test] = True
 
     return train, val, test
 
+def eval_split(model, data, mask):
+    model.eval()
+    out = model(data.x, data.edge_index)
+    preds = out.argmax(dim=1)[mask].cpu().numpy()
+    true = data.y[mask].cpu().numpy()
+
+    acc = accuracy_score(true, preds)
+    f1 = f1_score(true, preds, average="macro")
+    return acc, f1
 
 def main():
 
@@ -42,28 +67,29 @@ def main():
     y = np.load(y_loc).astype(np.int64)
     i_edge = np.load(e_loc).astype(np.int64)
 
-    X = torch.tensor(X, dtype=torch.float)
-    y = torch.tensor(y, dtype=torch.long)
-    i_edge = torch.tensor(i_edge, dtype=torch.long)
+    X_t = torch.tensor(X, dtype=torch.float)
+    y_t = torch.tensor(y, dtype=torch.long)
+    i_edge_t = torch.tensor(i_edge, dtype=torch.long)
 
-    train_mask, val_mask, test_mask = make_split_mask(y.numpy())
+    train_mask, val_mask, test_mask = make_split_mask(y)
 
     # define data
     data = Data(
-        X=X,
-        y=y,
-        i_edge=i_edge,
+        x=X_t,
+        y=y_t,
+        edge_index=i_edge_t,
         train_mask=train_mask,
         val_mask=val_mask,
         test_mask=test_mask
     )
+
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     data = data.to(device)
 
     # initialize GraphSage model
 
-    num_classes = int(y.max().item() + 1) 
+    num_classes = int(np.unique(y).size) 
 
     model = GraphSAGE(
         in_channels=data.num_features,
@@ -84,7 +110,8 @@ def main():
         model.train()
         optimizer.zero_grad()
 
-        out = model(data.x, data.i_edge)
+        out = model(data.x, data.edge_index)
+
         loss = F.cross_entropy(out[data.train_mask], data.y[data.train_mask])
         loss.backward()
         optimizer.step()
@@ -96,12 +123,13 @@ def main():
             best_val_acc = val_acc
             best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
 
-        model.load_state_dict(best_state)
+        
+    model.load_state_dict({k: v.to(device) for k, v in best_state.items()})
+    test_acc, test_f1 = eval_split(model, data, data.test_mask)
+    print(f"Best val accuracy: {best_val_acc}")
+    print(f"Test Accuracy: {test_acc}")
+    print(f"Test Macro F1: {test_f1}")
 
-        test_acc, test_f1 = eval_split(model, data, data.test_mask)
-        print(f"Best val accuracy: {best_val_acc}")
-        print(f"Test Accuracy: {test_acc}")
-        print(f"Test Macro F1: {test_f1}")
 
 
 
