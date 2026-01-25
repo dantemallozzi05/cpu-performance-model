@@ -123,15 +123,11 @@ def main():
             best_val_acc = val_acc
             best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
 
-        
     model.load_state_dict({k: v.to(device) for k, v in best_state.items()})
     test_acc, test_f1 = eval_split(model, data, data.test_mask)
     print(f"Best val accuracy: {best_val_acc}")
     print(f"Test Accuracy: {test_acc}")
     print(f"Test Macro F1: {test_f1}")
-
-
-
 
 if __name__ == "__main__":
     main()

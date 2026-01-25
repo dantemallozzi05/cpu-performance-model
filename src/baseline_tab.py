@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import json
 
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -79,6 +80,7 @@ def main():
         ),
     }
 
+    results = []
 
     for model_name, model in models.items():
         pipe = Pipeline(steps=[
@@ -93,10 +95,20 @@ def main():
         acc = accuracy_score(y_test, predict)
         f1 = f1_score(y_test, predict, average="macro")
 
+        results.append({
+            "model": model_name,
+            "accuracy": acc,
+            "macro_f1": f1
+        })
+
         print(f"Model: {model_name}")
         print(f"Accuracy: {acc:.4f}")
         print(f"Macro F1: {f1:.4f}")
         print(classification_report(y_test, predict))
+
+    os.makedirs("results", exist_ok=True)
+    with open("results/tab_results.json", "w") as f:
+        json.dump(results, f, indent=2)
 
 if __name__ == "__main__":
     main()
