@@ -14,15 +14,15 @@ CPU specification data sourced from Kaggle (located in `data/raw/`).
 
 ## Project Structure
 ``` bash
-├───data 
+├───data
 │   ├───processed
+│   │   └───graph
 │   └───raw
 ├───notebooks
-├───README.md 
-├───results 
+├───results
 │   └───figures
-├───src 
-└───.gitignore
+└───src
+    └───utils
 ```
 
 ## Results
