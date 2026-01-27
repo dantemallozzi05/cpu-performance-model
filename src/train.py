@@ -139,7 +139,7 @@ def main():
     with open("results/gnn_results.json", "w") as f:
         json.dump(results, f, indent=2)
 
-    print(results)
+    print(results) 
 
 if __name__ == "__main__":
     main()
