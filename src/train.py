@@ -4,11 +4,13 @@ import torch
 import torch.nn.functional as F
 import json
 
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
 
-from torch_geometric.data import Data
 from torch_geometric.nn import SAGEConv
+
+# custom helper methods for data processing
+from utils.gr_data import load_graph, make_split_masks
+from utils.seed import seed_all
 
 # Implementing GNN model GraphSAGE
 class GraphSAGE(torch.nn.Module):
@@ -24,27 +26,6 @@ class GraphSAGE(torch.nn.Module):
         x = self.conv2(x, edge_index)
         return x
     
-# make_split_mask - assigns nodes into train, evaluation, and test groups
-def make_split_mask(y):
-    id_n = np.arange(len(y))
-
-    train, test = train_test_split(
-        id_n, test_size=0.2, stratify=y
-    )
-
-    train, val = train_test_split(
-        train, test_size=0.2, stratify=y[train]
-    )
-
-    train_mask = torch.zeros(len(y), dtype=torch.bool)
-    val_mask = torch.zeros(len(y), dtype=torch.bool)
-    test_mask = torch.zeros(len(y), dtype=torch.bool)
-
-    train_mask[train] = True
-    val_mask[val] = True
-    test_mask[test] = True
-
-    return train, val, test
 
 def eval_split(model, data, mask):
     model.eval()
@@ -58,38 +39,22 @@ def eval_split(model, data, mask):
 
 def main():
 
-    # define graph variables
-    graph_dir = "data/processed/graph"
-    x_loc = os.path.join(graph_dir, "x.npy")
-    y_loc = os.path.join(graph_dir, "y.npy")
-    e_loc = os.path.join(graph_dir, "i_edge.npy")
+    # Common seed 
+    seed_all(42)
 
-    X = np.load(x_loc).astype(np.float32)
-    y = np.load(y_loc).astype(np.int64)
-    i_edge = np.load(e_loc).astype(np.int64)
+    data = load_graph()
+    train_mask, val_mask, test_mask = make_split_masks(data.y.cpu().numpy(), seed=42)
 
-    X_t = torch.tensor(X, dtype=torch.float)
-    y_t = torch.tensor(y, dtype=torch.long)
-    i_edge_t = torch.tensor(i_edge, dtype=torch.long)
-
-    train_mask, val_mask, test_mask = make_split_mask(y)
-
-    # define data
-    data = Data(
-        x=X_t,
-        y=y_t,
-        edge_index=i_edge_t,
-        train_mask=train_mask,
-        val_mask=val_mask,
-        test_mask=test_mask
-    )
+    data.train_mask = train_mask
+    data.val_mask = val_mask
+    data.test_mask = test_mask
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     data = data.to(device)
 
     # initialize GraphSage model
 
-    num_classes = int(np.unique(y).size) 
+    num_classes = int(data.y.unique().numel()) 
 
     model = GraphSAGE(
         in_channels=data.num_features,
@@ -129,7 +94,7 @@ def main():
     print(f"Test Accuracy: {test_acc}")
     print(f"Test Macro F1: {test_f1}")
     results = {
-        "model": "Graph",
+        "model": "GraphSAGE",
         "accuracy": float(test_acc),
         "macro_f1": float(test_f1),
         "best_val_accuracy": float(best_val_acc)

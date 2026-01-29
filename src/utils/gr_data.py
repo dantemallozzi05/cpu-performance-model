@@ -10,9 +10,9 @@ def load_graph(graph_dir="data/processed/graph"):
     y = np.load(os.path.join(graph_dir, "y.npy")).astype(np.int64)
     edge = np.load(os.path.join(graph_dir, "i_edge.npy")).astype(np.int64)
 
-    x_t = torch.tensor(x, dtype=torch.float32),
-    y_t = torch.tensor(y, dtype=torch.long),
-    e_t = torch.tensor(e, dtype=torch.long)
+    x_t = torch.tensor(x, dtype=torch.float32)
+    y_t = torch.tensor(y, dtype=torch.long)
+    e_t = torch.tensor(edge, dtype=torch.long)
 
     data = Data(
         x=x_t,
@@ -23,7 +23,8 @@ def load_graph(graph_dir="data/processed/graph"):
 
 
 def make_split_masks(y, seed=42):
-    id_n = np.arrange(len(y))
+    n = len(y)
+    id_n = np.arange(n)
 
     train, test = train_test_split(
         id_n, test_size=0.2, random_state=seed, stratify=y
