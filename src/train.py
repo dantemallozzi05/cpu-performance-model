@@ -90,9 +90,7 @@ def main():
 
     model.load_state_dict({k: v.to(device) for k, v in best_state.items()})
     test_acc, test_f1 = eval_split(model, data, data.test_mask)
-    print(f"Best val accuracy: {best_val_acc}")
-    print(f"Test Accuracy: {test_acc}")
-    print(f"Test Macro F1: {test_f1}")
+    
     results = {
         "model": "GraphSAGE",
         "accuracy": float(test_acc),
@@ -101,8 +99,8 @@ def main():
     }
 
     os.makedirs("results", exist_ok=True)
-    with open("results/gnn_results.json", "w") as f:
-        json.dump(results, f, indent=2)
+    with open("results/gnn_results.json", "w") as file:
+        json.dump(results, file, indent=2)
 
     print(results) 
 
