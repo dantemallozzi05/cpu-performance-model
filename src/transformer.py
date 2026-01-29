@@ -107,7 +107,7 @@ def main():
     }
 
     os.makedirs("results", exist_ok=True)
-    with open("results/gnn_results.json", "w") as file:
+    with open("results/transf_results.json", "w") as file:
         json.dump(results, file, indent=2)
 
     print(results)
