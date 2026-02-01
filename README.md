@@ -47,3 +47,11 @@ CPU specification data sourced from Kaggle (located in `data/raw/`).
 Random Forest outperforms graph-based models, due to strong nonlinear signal existing in tabular features. However, GraphSAGE improves over Logistic Regression, indicating that relational structure provides useful inductive bias.
 
 Since performance tiers are derived from input features, this task is framed as a proxy classification problem, inherently favoring tabular models. Graph-based approaches are expected to provide greater benefits when features are incomplete or when relationships are not effectively captured in tabular form.
+
+## Reproducibility
+
+All experiments conducted are fully reproducible.
+
+1. Place raw dataset in `data/raw/`
+2. Run preprocessing and training scripts
+3. Generated results are saved to `results/`
