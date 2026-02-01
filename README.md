@@ -55,3 +55,6 @@ All experiments conducted are fully reproducible.
 1. Place raw dataset in `data/raw/`
 2. Run preprocessing and training scripts
 3. Generated results are saved to `results/`
+4. Analysis and plots are produced in `notebooks`
+
+Random seeds are fixed for a consistent split between train / validation / test variables.
