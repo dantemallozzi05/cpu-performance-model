@@ -98,6 +98,17 @@ def main():
             best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
 
     model.load_state_dict({k: v.to(device) for k, v in best_state.items()})
+
+    torch.save(
+        {
+            "model_state": model.state_dict(),
+            "test_mask": data.test_mask.cpu(),
+            "num_features": data.num_features,
+            "num_classes": num_classes
+        },
+        "results/graph_transformer.pt"
+    )
+
     test_acc, test_f1 = eval_split(model, data, data.test_mask)
 
     results = {
